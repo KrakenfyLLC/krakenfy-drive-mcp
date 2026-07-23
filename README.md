@@ -60,8 +60,8 @@ The server exposes 17 bounded MCP tools:
 | Workspaces | Create folders and provision nested workspaces from Drive templates |
 | Organization | Upload, copy, move, rename, and recoverably trash files |
 | Delivery | Share files or folders with a user, group, or domain after confirmation |
-| Sheets | Read, update, and append rows to bounded spreadsheet ranges |
-| Drive support | Paginated results and shared-drive operations |
+| Sheets | Read validated bounded rectangles (max 10,000 cells per range), update ranges, and append rows |
+| Drive support | Paginated results, shared-drive operations, and automatic backoff on rate limits |
 
 ## Example
 
@@ -97,7 +97,10 @@ continue the workflow.
 - Trash and sharing operations require `confirm: true`.
 - Trash is recoverable through Google Drive.
 - Text responses are limited to 2 MiB.
+- Spreadsheet reads only accept bounded A1 rectangles, capped at 10,000 cells per range.
 - Folder-tree reads have explicit depth and item limits.
+- Rate-limited and transient Google API errors are retried with exponential backoff; non-idempotent
+  writes are only retried when Google rejected the request before executing it.
 - Every user supplies and controls their own Google Cloud project.
 
 See [SECURITY.md](SECURITY.md) for vulnerability reporting and security details.

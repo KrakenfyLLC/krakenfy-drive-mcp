@@ -18,11 +18,54 @@ const EXPORTS = {
   "application/vnd.google-apps.drawing": "image/png",
 };
 
+const RETRIABLE_STATUS = new Set([429, 500, 502, 503, 504]);
+const RATE_LIMIT_REASONS = new Set(["rateLimitExceeded", "userRateLimitExceeded"]);
+const TRANSIENT_CODES = new Set(["ECONNRESET", "ETIMEDOUT", "EAI_AGAIN", "EPIPE"]);
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function isRetriable(e, mutating) {
+  const status = Number(e?.status ?? e?.response?.status ?? e?.code) || 0;
+  const reasons = [].concat(e?.errors ?? e?.response?.data?.error?.errors ?? []);
+  const rateLimited = status === 429 || (status === 403 && reasons.some((detail) => RATE_LIMIT_REASONS.has(detail?.reason)));
+  if (rateLimited) return true; // safe for any verb: Google rejected the request before executing it
+  if (mutating) return false; // never re-send non-idempotent work after an ambiguous failure
+  return RETRIABLE_STATUS.has(status) || TRANSIENT_CODES.has(e?.code);
+}
+
+async function withBackoff(run, mutating) {
+  for (let attempt = 0; ; attempt++) {
+    try { return await run(); } catch (e) {
+      if (attempt >= 3 || !isRetriable(e, mutating)) throw e;
+      await sleep(500 * 2 ** attempt + Math.floor(Math.random() * 250));
+    }
+  }
+}
+
+const wrapApi = (owner, method, mutating) => {
+  const original = owner[method].bind(owner);
+  owner[method] = (...args) => {
+    const streaming = args.some((arg) => typeof arg?.media?.body?.pipe === "function");
+    return streaming ? original(...args) : withBackoff(() => original(...args), mutating);
+  };
+};
+
 let authPromise;
 async function apis() {
   authPromise ??= loadAuth();
   const auth = await authPromise;
-  return { drive: google.drive({ version: "v3", auth }), sheets: google.sheets({ version: "v4", auth }) };
+  const drive = google.drive({ version: "v3", auth });
+  const sheets = google.sheets({ version: "v4", auth });
+  wrapApi(drive.files, "list", false);
+  wrapApi(drive.files, "get", false);
+  wrapApi(drive.files, "export", false);
+  wrapApi(drive.files, "update", false); // PATCH is idempotent: rename, move, trash
+  wrapApi(drive.files, "create", true);
+  wrapApi(drive.files, "copy", true);
+  wrapApi(drive.permissions, "create", true);
+  wrapApi(sheets.spreadsheets.values, "batchGet", false);
+  wrapApi(sheets.spreadsheets.values, "update", false); // PUT is idempotent
+  wrapApi(sheets.spreadsheets.values, "append", true);
+  return { drive, sheets };
 }
 
 const response = (value, isError = false) => ({ content: [{ type: "text", text: typeof value === "string" ? value : JSON.stringify(value, null, 2) }], isError });
@@ -35,6 +78,17 @@ const cleanFolderPath = (value) => {
   if (!parts.length || parts.some((part) => part === "." || part === "..")) throw new Error(`Invalid folder path: ${value}`);
   return parts;
 };
+
+const MAX_RANGE_CELLS = 10000;
+const A1_RECT = /^(?:(?:'(?:[^']|'')+'|[^'!:]+)!)?\$?([A-Za-z]{1,3})\$?(\d{1,7})(?::\$?([A-Za-z]{1,3})\$?(\d{1,7}))?$/;
+const colToNum = (letters) => [...letters.toUpperCase()].reduce((total, ch) => total * 26 + ch.charCodeAt(0) - 64, 0);
+function assertBoundedRange(range) {
+  const match = A1_RECT.exec(String(range).trim());
+  if (!match) throw new Error(`Range "${range}" must be a bounded rectangle such as Sheet1!A1:F200; whole columns, whole rows, or whole sheets are not allowed.`);
+  const [, startCol, startRow, endCol = match[1], endRow = match[2]] = match;
+  const cells = (Math.abs(colToNum(endCol) - colToNum(startCol)) + 1) * (Math.abs(Number(endRow) - Number(startRow)) + 1);
+  if (cells > MAX_RANGE_CELLS) throw new Error(`Range "${range}" covers ${cells} cells; the limit is ${MAX_RANGE_CELLS} cells per range.`);
+}
 
 const tools = [
   tool("drive_search", "Search files and folders accessible in Google Drive.", {
@@ -223,9 +277,10 @@ const tools = [
     });
     return response(r.data);
   }),
-  tool("sheets_read", "Read bounded A1 ranges from a spreadsheet.", {
+  tool("sheets_read", "Read bounded A1 rectangles from a spreadsheet, such as Sheet1!A1:F200; max 10000 cells per range.", {
     spreadsheetId: { type: "string" }, ranges: { type: "array", minItems: 1, maxItems: 20, items: { type: "string" } }, valueRenderOption: { type: "string", enum: ["FORMATTED_VALUE", "UNFORMATTED_VALUE", "FORMULA"] }
   }, ["spreadsheetId", "ranges"], async (a) => {
+    for (const range of a.ranges) assertBoundedRange(range);
     const { sheets } = await apis();
     return response((await sheets.spreadsheets.values.batchGet({ spreadsheetId: a.spreadsheetId, ranges: a.ranges, valueRenderOption: a.valueRenderOption || "FORMATTED_VALUE" })).data.valueRanges ?? []);
   }),
@@ -256,7 +311,7 @@ const tools = [
   }),
 ];
 
-const server = new Server({ name: "krakenfy-gdrive", version: "1.1.0" }, { capabilities: { tools: {} } });
+const server = new Server({ name: "krakenfy-gdrive", version: "1.2.0" }, { capabilities: { tools: {} } });
 server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: tools.map(({ run, ...schema }) => schema) }));
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const selected = tools.find((t) => t.name === request.params.name);
