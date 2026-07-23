@@ -3,7 +3,7 @@
 An open-source MCP server that lets AI agents work with Google Drive and Google Sheets through an
 OAuth project controlled by the user. It does not depend on native ChatGPT or Claude connectors.
 
-**[Managed installation for teams →](https://krakenfyllc.github.io/krakenfy-drive-mcp/)**
+**[Managed installation for teams →](https://krakenfy.com/drive-agent/)**
 
 ## Capabilities
 
@@ -41,7 +41,7 @@ to use it. Krakenfy LLC optionally offers:
 | Pilot support | USD 79/month | Updates, one monthly review, and up to one hour of support |
 
 Model-provider and Google Workspace fees are not included. Final scope and total price are agreed
-before work begins. [Request a managed installation](https://krakenfyllc.github.io/krakenfy-drive-mcp/).
+before work begins. [Request a managed installation](https://krakenfy.com/drive-agent/).
 
 This project is independent and is not endorsed by, sponsored by, or affiliated with Google.
 Google Drive is a trademark of Google LLC.
