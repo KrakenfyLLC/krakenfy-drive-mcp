@@ -8,11 +8,25 @@ OAuth project controlled by the user. It does not depend on native ChatGPT or Cl
 ## Capabilities
 
 - Search files and browse folders with pagination.
+- Audit nested folder trees with bounded depth and item limits.
 - Read, export, and download files.
 - Create folders; upload, copy, move, and rename files.
+- Provision repeatable client or project workspaces from nested folders and Drive templates.
+- Share files and folders with explicit confirmation.
 - Move items to trash with explicit confirmation.
-- Read and update bounded Google Sheets ranges.
+- Read, update, and append rows to bounded Google Sheets ranges.
 - Work with shared drives.
+
+## Business workflows
+
+- **Client onboarding:** create the complete folder structure, copy standard templates, and prepare the
+  workspace in one tool call.
+- **Recurring reporting:** collect source material, read bounded ranges, and append new reporting rows
+  without manual copy and paste.
+- **Delivery handoff:** organize approved files and share the final folder with the right person or
+  domain after explicit confirmation.
+- **Drive audits:** map a nested folder tree to spot misplaced files, inconsistent structures, and
+  handoff gaps.
 
 ## Security
 

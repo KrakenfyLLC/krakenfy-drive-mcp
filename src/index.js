@@ -30,6 +30,11 @@ const fail = (e) => response({ error: e?.message ?? String(e), code: e?.code ?? 
 const esc = (s) => String(s).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 const pageSize = (n) => Math.max(1, Math.min(Number(n) || 25, 100));
 const tool = (name, description, properties, required, run) => ({ name, description, inputSchema: { type: "object", properties, required, additionalProperties: false }, run });
+const cleanFolderPath = (value) => {
+  const parts = String(value).split("/").map((part) => part.trim()).filter(Boolean);
+  if (!parts.length || parts.some((part) => part === "." || part === "..")) throw new Error(`Invalid folder path: ${value}`);
+  return parts;
+};
 
 const tools = [
   tool("drive_search", "Search files and folders accessible in Google Drive.", {
@@ -52,6 +57,37 @@ const tools = [
     const folderId = a.folderId || "root";
     const r = await drive.files.list({ q: `'${esc(folderId)}' in parents and trashed = false`, pageSize: pageSize(a.pageSize), pageToken: a.pageToken, orderBy: "folder,name", fields: `nextPageToken,files(${FIELDS})`, supportsAllDrives: true, includeItemsFromAllDrives: true });
     return response({ folderId, files: r.data.files ?? [], nextPageToken: r.data.nextPageToken ?? null });
+  }),
+  tool("drive_get_folder_tree", "Audit a folder tree recursively, including file metadata and paths.", {
+    folderId: { type: "string", default: "root" }, maxDepth: { type: "integer", minimum: 1, maximum: 5, default: 3 },
+    maxItems: { type: "integer", minimum: 1, maximum: 500, default: 200 }
+  }, [], async (a) => {
+    const { drive } = await apis();
+    const rootId = a.folderId || "root";
+    const maxDepth = Math.max(1, Math.min(Number(a.maxDepth) || 3, 5));
+    const maxItems = Math.max(1, Math.min(Number(a.maxItems) || 200, 500));
+    const items = [];
+    const queue = [{ id: rootId, path: "", depth: 0 }];
+    let truncated = false;
+    while (queue.length && !truncated) {
+      const current = queue.shift();
+      let pageToken;
+      do {
+        const r = await drive.files.list({
+          q: `'${esc(current.id)}' in parents and trashed = false`, pageSize: Math.min(100, maxItems - items.length),
+          pageToken, orderBy: "folder,name", fields: `nextPageToken,files(${FIELDS})`,
+          supportsAllDrives: true, includeItemsFromAllDrives: true
+        });
+        for (const file of r.data.files ?? []) {
+          const itemPath = current.path ? `${current.path}/${file.name}` : file.name;
+          items.push({ ...file, path: itemPath, depth: current.depth + 1 });
+          if (file.mimeType === FOLDER && current.depth + 1 < maxDepth) queue.push({ id: file.id, path: itemPath, depth: current.depth + 1 });
+          if (items.length >= maxItems) { truncated = true; break; }
+        }
+        pageToken = r.data.nextPageToken;
+      } while (pageToken && !truncated);
+    }
+    return response({ folderId: rootId, maxDepth, items, truncated, remainingFolders: queue.length });
   }),
   tool("drive_get_metadata", "Get file metadata, owners, and permissions.", { fileId: { type: "string" } }, ["fileId"], async (a) => {
     const { drive } = await apis();
@@ -92,6 +128,55 @@ const tools = [
     const { drive } = await apis();
     return response((await drive.files.create({ requestBody: { name: a.name, mimeType: FOLDER, parents: [a.parentId || "root"] }, fields: FIELDS, supportsAllDrives: true })).data);
   }),
+  tool("drive_create_workspace", "Create a repeatable client or project workspace with nested folders and optional template copies.", {
+    name: { type: "string" }, parentId: { type: "string", default: "root" },
+    folderPaths: { type: "array", maxItems: 50, items: { type: "string" } },
+    templates: {
+      type: "array", maxItems: 20, items: {
+        type: "object", additionalProperties: false, required: ["fileId"],
+        properties: { fileId: { type: "string" }, name: { type: "string" }, targetFolderPath: { type: "string" } }
+      }
+    }
+  }, ["name"], async (a) => {
+    const { drive } = await apis();
+    const root = (await drive.files.create({
+      requestBody: { name: a.name, mimeType: FOLDER, parents: [a.parentId || "root"] },
+      fields: FIELDS, supportsAllDrives: true
+    })).data;
+    const folders = new Map([["", root]]);
+    const ensureFolder = async (folderPath) => {
+      const parts = cleanFolderPath(folderPath);
+      let key = "";
+      let parent = root;
+      for (const part of parts) {
+        key = key ? `${key}/${part}` : part;
+        if (!folders.has(key)) {
+          const created = (await drive.files.create({
+            requestBody: { name: part, mimeType: FOLDER, parents: [parent.id] },
+            fields: FIELDS, supportsAllDrives: true
+          })).data;
+          folders.set(key, created);
+        }
+        parent = folders.get(key);
+      }
+      return parent;
+    };
+    for (const folderPath of a.folderPaths ?? []) await ensureFolder(folderPath);
+    const copies = [];
+    for (const template of a.templates ?? []) {
+      const target = template.targetFolderPath ? await ensureFolder(template.targetFolderPath) : root;
+      const requestBody = { parents: [target.id] };
+      if (template.name) requestBody.name = template.name;
+      copies.push((await drive.files.copy({
+        fileId: template.fileId, requestBody, fields: FIELDS, supportsAllDrives: true
+      })).data);
+    }
+    return response({
+      workspace: root,
+      folders: [...folders.entries()].filter(([folderPath]) => folderPath).map(([folderPath, folder]) => ({ path: folderPath, ...folder })),
+      templateCopies: copies
+    });
+  }),
   tool("drive_upload_file", "Upload a new local file.", {
     source: { type: "string" }, name: { type: "string" }, parentId: { type: "string", default: "root" }, mimeType: { type: "string" }
   }, ["source"], async (a) => {
@@ -119,6 +204,25 @@ const tools = [
     const { drive } = await apis();
     return response((await drive.files.update({ fileId: a.fileId, requestBody: { trashed: true }, fields: FIELDS, supportsAllDrives: true })).data);
   }),
+  tool("drive_share_file", "Share a file or folder with a person, group, or domain; requires confirm=true.", {
+    fileId: { type: "string" }, type: { type: "string", enum: ["user", "group", "domain"] },
+    role: { type: "string", enum: ["reader", "commenter", "writer"] }, emailAddress: { type: "string" },
+    domain: { type: "string" }, sendNotificationEmail: { type: "boolean", default: true }, confirm: { type: "boolean" }
+  }, ["fileId", "type", "role", "confirm"], async (a) => {
+    if (a.confirm !== true) throw new Error("Operation cancelled: confirm must be true");
+    if (["user", "group"].includes(a.type) && !a.emailAddress) throw new Error("emailAddress is required for user or group sharing");
+    if (a.type === "domain" && !a.domain) throw new Error("domain is required for domain sharing");
+    const { drive } = await apis();
+    const requestBody = { type: a.type, role: a.role };
+    if (a.emailAddress) requestBody.emailAddress = a.emailAddress;
+    if (a.domain) requestBody.domain = a.domain;
+    const r = await drive.permissions.create({
+      fileId: a.fileId, requestBody, fields: "id,type,role,emailAddress,domain",
+      sendNotificationEmail: a.type === "domain" ? false : a.sendNotificationEmail !== false,
+      supportsAllDrives: true
+    });
+    return response(r.data);
+  }),
   tool("sheets_read", "Read bounded A1 ranges from a spreadsheet.", {
     spreadsheetId: { type: "string" }, ranges: { type: "array", minItems: 1, maxItems: 20, items: { type: "string" } }, valueRenderOption: { type: "string", enum: ["FORMATTED_VALUE", "UNFORMATTED_VALUE", "FORMULA"] }
   }, ["spreadsheetId", "ranges"], async (a) => {
@@ -132,9 +236,27 @@ const tools = [
     const r = await sheets.spreadsheets.values.update({ spreadsheetId: a.spreadsheetId, range: a.range, valueInputOption: a.valueInputOption || "USER_ENTERED", requestBody: { values: a.values } });
     return response({ updatedRange: r.data.updatedRange, updatedRows: r.data.updatedRows, updatedColumns: r.data.updatedColumns, updatedCells: r.data.updatedCells });
   }),
+  tool("sheets_append_rows", "Append rows to a Google Sheet for logs, intake, and recurring reports.", {
+    spreadsheetId: { type: "string" }, range: { type: "string" },
+    values: { type: "array", minItems: 1, maxItems: 500, items: { type: "array", items: {} } },
+    valueInputOption: { type: "string", enum: ["RAW", "USER_ENTERED"] },
+    insertDataOption: { type: "string", enum: ["OVERWRITE", "INSERT_ROWS"] }
+  }, ["spreadsheetId", "range", "values"], async (a) => {
+    const { sheets } = await apis();
+    const r = await sheets.spreadsheets.values.append({
+      spreadsheetId: a.spreadsheetId, range: a.range,
+      valueInputOption: a.valueInputOption || "USER_ENTERED", insertDataOption: a.insertDataOption || "INSERT_ROWS",
+      requestBody: { values: a.values }
+    });
+    return response({
+      tableRange: r.data.tableRange ?? null, updatedRange: r.data.updates?.updatedRange,
+      updatedRows: r.data.updates?.updatedRows, updatedColumns: r.data.updates?.updatedColumns,
+      updatedCells: r.data.updates?.updatedCells
+    });
+  }),
 ];
 
-const server = new Server({ name: "krakenfy-gdrive", version: "1.0.0" }, { capabilities: { tools: {} } });
+const server = new Server({ name: "krakenfy-gdrive", version: "1.1.0" }, { capabilities: { tools: {} } });
 server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: tools.map(({ run, ...schema }) => schema) }));
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const selected = tools.find((t) => t.name === request.params.name);

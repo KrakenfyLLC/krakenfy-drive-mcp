@@ -9,11 +9,14 @@ sharing their OAuth tokens with a third-party SaaS.
 - Installation on supported workstations or servers.
 - Least-privilege review and folder-access design.
 - Connection to a compatible MCP client.
-- One validated workflow and operational handoff.
+- One validated business workflow and operational handoff.
 - Credential-revocation and recovery instructions.
 
 ## Optional
 
+- Client and project workspace provisioning from company templates.
+- Recurring reporting flows that append or update bounded Sheet ranges.
+- Folder-tree audits and controlled delivery sharing.
 - Multi-user rollout, shared-drive support, audit logs and custom Drive/Sheets workflows.
 - Ongoing maintenance and support.
 

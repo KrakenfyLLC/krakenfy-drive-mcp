@@ -22,7 +22,7 @@
           <p class="lead">We deploy an agent that can search, read, and organize documents and spreadsheets through an OAuth project owned by your company.</p>
           <div class="actions"><a class="button primary" href="mailto:hello@krakenfy.com?subject=Private%20Drive%20Agent%20assessment">Request an assessment</a><a class="button" href="#how-it-works">How it works</a></div>
         </div>
-        <aside class="card"><span class="eyebrow">Verifiable core</span><strong>13</strong><p>bounded MCP tools with pagination and recoverable actions.</p><ul><li>OAuth under your control</li><li>Drive and Sheets</li><li>No tokens stored by Krakenfy</li><li>Auditable MIT-licensed code</li></ul></aside>
+        <aside class="card"><span class="eyebrow">Verifiable core</span><strong>17</strong><p>bounded MCP tools for complete Drive workflows.</p><ul><li>Workspace provisioning</li><li>Folder-tree audits</li><li>Recurring report updates</li><li>Confirmed file sharing</li></ul></aside>
       </section>
 
       <section class="section" id="how-it-works">
@@ -36,8 +36,8 @@
 
       <section class="section">
         <div class="proof">
-          <div><span class="eyebrow">What it can do</span><h2>Less searching. More finished work.</h2><p class="lead">Browse folders, find files, read Docs, query or update Sheets, download, upload, copy, move, and rename.</p></div>
-          <div class="code">drive_search({ name: "report" })<br>drive_list_folder({ folderId })<br>sheets_read({ ranges: ["Sales!A1:F50"] })<br>drive_upload_file({ source, parentId })<br><br>// Trash requires explicit confirmation<br>drive_trash_file({ fileId, confirm: true })</div>
+          <div><span class="eyebrow">What it can do</span><h2>Automate the process, not just the file search.</h2><p class="lead">Provision workspaces from templates, audit nested folders, append reporting rows, organize deliverables, and share them after confirmation.</p></div>
+          <div class="code">drive_create_workspace({<br>&nbsp;&nbsp;name: "Acme",<br>&nbsp;&nbsp;folderPaths: ["01 Intake", "02 Work/Reports"],<br>&nbsp;&nbsp;templates: [{ fileId, targetFolderPath: "02 Work" }]<br>})<br><br>sheets_append_rows({ spreadsheetId, range, values })<br>drive_get_folder_tree({ folderId, maxDepth: 3 })</div>
         </div>
       </section>
 

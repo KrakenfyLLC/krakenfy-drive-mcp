@@ -10,9 +10,13 @@ const transport = new StdioClientTransport({
 const client = new Client({ name: "smoke-test", version: "1.0.0" });
 await client.connect(transport);
 const { tools } = await client.listTools();
-assert.equal(tools.length, 13);
+assert.equal(tools.length, 17);
 assert(tools.some((item) => item.name === "drive_list_folder"));
+assert(tools.some((item) => item.name === "drive_get_folder_tree"));
+assert(tools.some((item) => item.name === "drive_create_workspace"));
 assert(tools.some((item) => item.name === "drive_trash_file"));
+assert(tools.some((item) => item.name === "drive_share_file"));
 assert(tools.some((item) => item.name === "sheets_update"));
+assert(tools.some((item) => item.name === "sheets_append_rows"));
 await client.close();
-console.log("MCP smoke test passed: 13 tools exposed");
+console.log("MCP smoke test passed: 17 tools exposed");
