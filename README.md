@@ -1,64 +1,123 @@
 # Krakenfy Drive MCP
 
-An open-source MCP server that lets AI agents work with Google Drive and Google Sheets through an
-OAuth project controlled by the user. It does not depend on native ChatGPT or Claude connectors.
+Turn repeated Google Drive work into one instruction.
 
-**[Managed installation for teams →](https://krakenfy.com/drive-agent/)**
+Krakenfy Drive MCP is an open-source server that lets AI agents provision workspaces, reuse company
+templates, inspect folder structures, update recurring reports, and deliver files through an OAuth
+project controlled by the user. It does not depend on native ChatGPT or Claude connectors.
+
+[![CI](https://github.com/KrakenfyLLC/krakenfy-drive-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/KrakenfyLLC/krakenfy-drive-mcp/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-4F4EBD.svg)](LICENSE)
+[![MCP tools](https://img.shields.io/badge/MCP_tools-17-34A3AD.svg)](#capabilities)
+
+**[Install it yourself](docs/INSTALL.md)** ·
+**[Deploy it with Krakenfy](https://krakenfy.com/drive-agent/)** ·
+**[Ask the community](https://github.com/KrakenfyLLC/krakenfy-drive-mcp/discussions)**
+
+![A client onboarding instruction creates a Drive workspace, copies templates, and prepares a controlled handoff](docs/assets/workflow-demo.svg)
+
+## Workflows it can automate
+
+### Client onboarding
+
+Create the complete account workspace, build nested folders, and copy the correct Docs, Sheets, and
+Slides templates with consistent names in one tool call.
+
+### Recurring reporting
+
+Find source material, read bounded spreadsheet ranges, append new records, update reporting cells,
+and place the finished deliverable in the correct folder.
+
+### Drive audits and delivery handoffs
+
+Map a nested folder tree, identify misplaced work, organize approved files, and share the final
+folder with a person, group, or company domain after explicit confirmation.
+
+## Why companies use the managed service
+
+The MCP is free and open source. You can install and adapt it yourself.
+
+Krakenfy offers an optional implementation service for teams that want a production-ready workflow
+configured around their permissions, templates, operating process, and acceptance criteria. The
+service can include:
+
+- Client-owned Google Cloud and OAuth configuration.
+- Workflow mapping around one measurable recurring task.
+- Safeguards and human approval points.
+- Validation with real client files and exception handling.
+- Private deployment, documentation, training, and operational handoff.
+
+**[See the managed deployment options →](https://krakenfy.com/drive-agent/)**
 
 ## Capabilities
 
-- Search files and browse folders with pagination.
-- Audit nested folder trees with bounded depth and item limits.
-- Read, export, and download files.
-- Create folders; upload, copy, move, and rename files.
-- Provision repeatable client or project workspaces from nested folders and Drive templates.
-- Share files and folders with explicit confirmation.
-- Move items to trash with explicit confirmation.
-- Read, update, and append rows to bounded Google Sheets ranges.
-- Work with shared drives.
+The server exposes 17 bounded MCP tools:
 
-## Business workflows
+| Area | Available operations |
+| --- | --- |
+| Discovery | Search files, list folders, inspect metadata, and audit nested folder trees |
+| Content | Read or export text and download files without overwriting local paths |
+| Workspaces | Create folders and provision nested workspaces from Drive templates |
+| Organization | Upload, copy, move, rename, and recoverably trash files |
+| Delivery | Share files or folders with a user, group, or domain after confirmation |
+| Sheets | Read, update, and append rows to bounded spreadsheet ranges |
+| Drive support | Paginated results and shared-drive operations |
 
-- **Client onboarding:** create the complete folder structure, copy standard templates, and prepare the
-  workspace in one tool call.
-- **Recurring reporting:** collect source material, read bounded ranges, and append new reporting rows
-  without manual copy and paste.
-- **Delivery handoff:** organize approved files and share the final folder with the right person or
-  domain after explicit confirmation.
-- **Drive audits:** map a nested folder tree to spot misplaced files, inconsistent structures, and
-  handoff gaps.
+## Example
 
-## Security
+```json
+{
+  "name": "Acme",
+  "parentId": "customer-root-folder-id",
+  "folderPaths": [
+    "01 Intake",
+    "02 Work/Research",
+    "02 Work/Reports",
+    "03 Delivery"
+  ],
+  "templates": [
+    {
+      "fileId": "report-template-id",
+      "name": "Acme — Weekly Report",
+      "targetFolderPath": "02 Work/Reports"
+    }
+  ]
+}
+```
+
+Pass this to `drive_create_workspace` and the agent creates the repeatable structure and template
+copies. It can then use `sheets_append_rows`, `drive_get_folder_tree`, and `drive_share_file` to
+continue the workflow.
+
+## Security model
 
 - Credentials live outside the repository.
 - Tokens are stored with `0600` permissions.
-- Downloads never overwrite local files.
-- Destructive actions are recoverable and require `confirm: true`.
+- Downloads never overwrite existing local files.
+- Trash and sharing operations require `confirm: true`.
+- Trash is recoverable through Google Drive.
 - Text responses are limited to 2 MiB.
-- Every user supplies their own Google Cloud project.
+- Folder-tree reads have explicit depth and item limits.
+- Every user supplies and controls their own Google Cloud project.
+
+See [SECURITY.md](SECURITY.md) for vulnerability reporting and security details.
 
 ## Installation
 
-See the [installation guide](docs/INSTALL.md). For managed installation and enterprise adaptations,
-see [managed services](docs/MANAGED-SERVICE.md).
+Follow the [self-hosted installation guide](docs/INSTALL.md) to configure Google Cloud, authorize an
+account, and connect a compatible MCP client.
 
-## Optional commercial services
+For private implementation, workflow adaptations, or a team rollout, see
+[managed deployment](https://krakenfy.com/drive-agent/).
 
-The software in this repository is free under the MIT License. Purchasing a service is not required
-to use it. Krakenfy LLC optionally offers:
+## Community and support
 
-| Service | Starting price | Includes |
-| --- | ---: | --- |
-| Essential installation | USD 199 one-time | One workstation, one Google account, client-owned OAuth, MCP setup, and validation |
-| Private workflow | USD 600 one-time | Essential installation plus one custom workflow tested with real client data |
-| Team rollout | USD 1,200 one-time | Up to five users, shared-drive access design, rollout, and training |
-| Pilot support | USD 79/month | Updates, one monthly review, and up to one hour of support |
-
-Model-provider and Google Workspace fees are not included. Final scope and total price are agreed
-before work begins. [Request a managed installation](https://krakenfy.com/drive-agent/).
-
-This project is independent and is not endorsed by, sponsored by, or affiliated with Google.
-Google Drive is a trademark of Google LLC.
+- Use [Discussions](https://github.com/KrakenfyLLC/krakenfy-drive-mcp/discussions) for questions,
+  workflow ideas, and examples.
+- Use [Issues](https://github.com/KrakenfyLLC/krakenfy-drive-mcp/issues) for reproducible bugs and
+  open-source feature requests.
+- Use the [Krakenfy assessment](https://krakenfy.com/drive-agent/) for private installation,
+  workflow design, and commercial inquiries.
 
 ## Development
 
@@ -71,3 +130,6 @@ npm test
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
+This project is independent and is not endorsed by, sponsored by, or affiliated with Google.
+Google Drive is a trademark of Google LLC.

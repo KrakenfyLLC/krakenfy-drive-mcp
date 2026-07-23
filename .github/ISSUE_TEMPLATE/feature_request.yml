@@ -1,0 +1,38 @@
+name: Open-source feature request
+description: Propose a reusable capability for the public MCP server.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for reusable open-source capabilities. For a private workflow or implementation, use the Krakenfy deployment link instead.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Workflow problem
+      description: What repeated Drive or Sheets task should become easier?
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+      description: Describe the result, not only the API method.
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Example
+      description: Provide a sanitized example input and expected output.
+  - type: checkboxes
+    id: fit
+    attributes:
+      label: Project fit
+      options:
+        - label: This would be useful beyond one private organization.
+          required: true
+        - label: The example contains no credentials, tokens, private file contents, or personal information.
+          required: true

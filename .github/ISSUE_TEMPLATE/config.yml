@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and workflow ideas
+    url: https://github.com/KrakenfyLLC/krakenfy-drive-mcp/discussions
+    about: Ask for help, share an example, or discuss an open-source workflow.
+  - name: Private implementation with Krakenfy
+    url: https://krakenfy.com/drive-agent/
+    about: Request installation, workflow design, a team rollout, or another commercial service.
+  - name: Security vulnerability
+    url: https://github.com/KrakenfyLLC/krakenfy-drive-mcp/security/advisories/new
+    about: Privately report a security vulnerability.

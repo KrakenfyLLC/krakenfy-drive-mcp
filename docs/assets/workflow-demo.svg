@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" role="img" aria-labelledby="title desc">
+  <title id="title">Krakenfy Drive MCP workflow demonstration</title>
+  <desc id="desc">A single onboarding instruction triggers workspace creation, template copying, report updates, and a controlled handoff.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4F4EBD"/>
+      <stop offset="0.55" stop-color="#4276B5"/>
+      <stop offset="1" stop-color="#34A3AD"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#141833" flood-opacity=".2"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="520" rx="30" fill="url(#bg)"/>
+  <text x="58" y="62" fill="#FFD97D" font-family="Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="2">ONE INSTRUCTION → A REPEATABLE DRIVE WORKFLOW</text>
+  <rect x="58" y="96" width="1084" height="105" rx="18" fill="#1B1F3B" filter="url(#shadow)"/>
+  <circle cx="96" cy="132" r="7" fill="#FF9B85"/>
+  <circle cx="120" cy="132" r="7" fill="#FFD97D"/>
+  <circle cx="144" cy="132" r="7" fill="#34A3AD"/>
+  <text x="92" y="174" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="24" font-weight="700">“Prepare the Acme client workspace from our standard templates.”</text>
+  <path d="M600 215v36" stroke="#FFD97D" stroke-width="4" stroke-linecap="round"/>
+  <path d="m590 242 10 12 10-12" fill="none" stroke="#FFD97D" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <g font-family="Arial, sans-serif">
+    <rect x="58" y="270" width="252" height="174" rx="20" fill="#FFFFFF" filter="url(#shadow)"/>
+    <circle cx="94" cy="308" r="18" fill="#FFD97D"/>
+    <text x="89" y="315" fill="#1B1F3B" font-size="20" font-weight="700">1</text>
+    <text x="124" y="315" fill="#1B1F3B" font-size="19" font-weight="700">Create workspace</text>
+    <text x="84" y="354" fill="#566178" font-size="16">01 Intake</text>
+    <text x="84" y="383" fill="#566178" font-size="16">02 Work / Reports</text>
+    <text x="84" y="412" fill="#566178" font-size="16">03 Delivery</text>
+    <rect x="335" y="270" width="252" height="174" rx="20" fill="#FFFFFF" filter="url(#shadow)"/>
+    <circle cx="371" cy="308" r="18" fill="#FFD97D"/>
+    <text x="366" y="315" fill="#1B1F3B" font-size="20" font-weight="700">2</text>
+    <text x="401" y="315" fill="#1B1F3B" font-size="19" font-weight="700">Copy templates</text>
+    <text x="361" y="354" fill="#566178" font-size="16">Brief document</text>
+    <text x="361" y="383" fill="#566178" font-size="16">Weekly report</text>
+    <text x="361" y="412" fill="#566178" font-size="16">Delivery checklist</text>
+    <rect x="612" y="270" width="252" height="174" rx="20" fill="#FFFFFF" filter="url(#shadow)"/>
+    <circle cx="648" cy="308" r="18" fill="#FFD97D"/>
+    <text x="643" y="315" fill="#1B1F3B" font-size="20" font-weight="700">3</text>
+    <text x="678" y="315" fill="#1B1F3B" font-size="19" font-weight="700">Update records</text>
+    <text x="638" y="354" fill="#566178" font-size="16">Append intake row</text>
+    <text x="638" y="383" fill="#566178" font-size="16">Apply naming rules</text>
+    <text x="638" y="412" fill="#566178" font-size="16">Verify folder tree</text>
+    <rect x="889" y="270" width="253" height="174" rx="20" fill="#FFFFFF" filter="url(#shadow)"/>
+    <circle cx="925" cy="308" r="18" fill="#FF9B85"/>
+    <text x="920" y="315" fill="#1B1F3B" font-size="20" font-weight="700">4</text>
+    <text x="955" y="315" fill="#1B1F3B" font-size="19" font-weight="700">Approve handoff</text>
+    <text x="915" y="354" fill="#566178" font-size="16">Review recipients</text>
+    <text x="915" y="383" fill="#566178" font-size="16">Confirm sharing</text>
+    <text x="915" y="412" fill="#566178" font-size="16">Notify account owner</text>
+  </g>
+  <text x="58" y="487" fill="#FFFFFF" opacity=".82" font-family="Arial, sans-serif" font-size="16">Your Drive · Your OAuth · Explicit approval · Open-source core</text>
+</svg>
