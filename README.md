@@ -3,6 +3,8 @@
 Servidor MCP open source para que agentes de IA trabajen con Google Drive y Google Sheets usando un
 proyecto OAuth que controla el propio usuario. No depende de conectores nativos de ChatGPT o Claude.
 
+**[Instalación administrada para equipos →](https://krakenfyllc.github.io/krakenfy-drive-mcp/)**
+
 ## Capacidades
 
 - Buscar archivos y navegar carpetas con paginación.
