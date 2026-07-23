@@ -4,7 +4,7 @@ import { authenticate } from "@google-cloud/local-auth";
 import { google } from "googleapis";
 
 export const CREDS_DIR = process.env.GDRIVE_CREDS_DIR;
-if (!CREDS_DIR) throw new Error("GDRIVE_CREDS_DIR es obligatorio");
+if (!CREDS_DIR) throw new Error("GDRIVE_CREDS_DIR is required");
 
 const keyPath = path.join(CREDS_DIR, "gcp-oauth.keys.json");
 const tokenPath = path.join(CREDS_DIR, ".gdrive-server-credentials.json");
@@ -22,7 +22,7 @@ function saveToken(credentials) {
 }
 
 export async function loadAuth() {
-  if (!fs.existsSync(tokenPath)) throw new Error(`No hay token OAuth en ${tokenPath}. Ejecuta npm run auth.`);
+  if (!fs.existsSync(tokenPath)) throw new Error(`No OAuth token found at ${tokenPath}. Run npm run auth.`);
   const config = oauthConfig();
   const saved = JSON.parse(fs.readFileSync(tokenPath, "utf8"));
   const client = new google.auth.OAuth2(config.client_id, config.client_secret, config.redirect_uris?.[0]);
