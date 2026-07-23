@@ -1,0 +1,23 @@
+{
+  "name": "@krakenfy/gdrive-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Servidor MCP propio para Google Drive y Google Sheets",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "auth": "node src/auth-cli.js",
+    "check": "node --check src/index.js && node --check src/auth.js && node --check test/smoke.js",
+    "test": "node test/smoke.js"
+  },
+  "dependencies": {
+    "@google-cloud/local-auth": "3.0.1",
+    "@modelcontextprotocol/sdk": "1.29.0",
+    "googleapis": "173.0.0"
+  },
+  "overrides": {
+    "@hono/node-server": "2.0.11",
+    "uuid": "11.1.1"
+  }
+}
